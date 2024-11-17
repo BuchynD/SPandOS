@@ -1,0 +1,72 @@
+
+name: Build RPM and DEB Packages
+
+on:
+  push:
+    branches:
+      - main  # Trigger the action when code is pushed to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger the action for pull requests targeting the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install dependencies for building RPM and DEB packages
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm build-essential fakeroot dpkg-dev
+
+      # Step 3: Set up RPM build directories
+      - name: Set up RPM build directories
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      # Step 4: Copy necessary files to RPM build directories
+      - name: Copy files to RPM build directories
+        run: |
+          cp script.sh ~/rpmbuild/SOURCES/script.sh
+          cp my_script_package.spec ~/rpmbuild/SPECS/my_script_package.spec
+
+      # Step 5: Build RPM package
+      - name: Build RPM package
+        run: |
+          rpmbuild -ba ~/rpmbuild/SPECS/my_script_package.spec
+
+      # Step 6: Set up DEB build directory structure
+      - name: Set up DEB build directory structure
+        run: |
+          mkdir -p ~/debbuild/mypackage-1.0/usr/local/bin
+          mkdir -p ~/debbuild/mypackage-1.0/usr/share/doc/mypackage
+          mkdir -p ~/debbuild/mypackage-1.0/DEBIAN
+
+          # Copy the script and other necessary files for DEB
+          cp script.sh ~/debbuild/mypackage-1.0/usr/local/bin/
+          cp mypackage-1.0/usr/share/doc/mypackage/changelog.Debian.gz ~/debbuild/mypackage-1.0/usr/share/doc/mypackage/changelog.Debian.gz
+          cp mypackage-1.0/usr/share/doc/mypackage/copyright ~/debbuild/mypackage-1.0/usr/share/doc/mypackage/copyright
+          cp mypackage-1.0/DEBIAN/control ~/debbuild/mypackage-1.0/DEBIAN/control
+          cp mypackage-1.0/DEBIAN/rules ~/debbuild/mypackage-1.0/DEBIAN/rules
+          cp mypackage-1.0/DEBIAN/compat ~/debbuild/mypackage-1.0/DEBIAN/compat
+
+      # Step 7: Build DEB package
+      - name: Build DEB package
+        run: |
+          cd ~/debbuild/mypackage-1.0
+          dpkg-deb --build . ../mypackage-1.0.deb
+
+      # Step 8: Upload RPM and DEB artifacts
+      - name: Upload RPM and DEB artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: my_script_package
+          path: |
+            ~/rpmbuild/RPMS/noarch/my_script_package-1.0-1.noarch.rpm
+            ~/debbuild/mypackage-1.0.deb
+
