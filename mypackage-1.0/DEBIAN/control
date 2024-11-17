@@ -1,0 +1,9 @@
+Package: mypackage
+Version: 1.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Buchyn Daniil <buchindaniil6@gmail.com>
+Description: A simple package that installs script.sh
+ This is a longer description that can span multiple lines.
+ It provides more details about the package.
